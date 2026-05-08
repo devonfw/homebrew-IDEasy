@@ -34,9 +34,7 @@ brew untap devonfw/ideasy
 ```
 
 ## About IDEasy
-
-IDEasy allows you to create a small git repo with the dev environment configuration for your software project. Developers can then set up the complete
-environment with a single CLI command, getting all needed tools in the right versions — no manual installation, no configuration drift.
+IDEasy is a Tool to automate the setup and updates of a development environment for any project
 
 - **Repository:** <https://github.com/devonfw/IDEasy>
 - **Documentation:** <https://github.com/devonfw/IDEasy/blob/main/documentation/setup.adoc>
