@@ -1,0 +1,79 @@
+# =============================================================================
+# auto-update.yml — Automatically check for new IDEasy releases
+# =============================================================================
+# Runs daily, checks Maven Central for new releases, and opens a PR if found.
+# =============================================================================
+
+name: Auto-update IDEasy formula
+
+on:
+  schedule:
+    # Run daily at 08:00 UTC
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  check-update:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout tap repository
+        uses: actions/checkout@v4
+
+      - name: Check for new IDEasy release
+        id: check
+        run: |
+          # Get current version from formula
+          CURRENT=$(grep 'version "' Formula/ideasy.rb | head -1 | sed 's/.*version "\(.*\)"/\1/')
+          echo "Current version: $CURRENT"
+
+          # Get latest release from GitHub API
+          LATEST=$(curl -s https://api.github.com/repos/devonfw/IDEasy/releases/latest \
+            | grep '"tag_name"' \
+            | sed -E 's/.*"tag_name":\s*"release\/([^"]+)".*/\1/')
+          echo "Latest version: $LATEST"
+
+          if [ "$CURRENT" = "$LATEST" ]; then
+            echo "Already up to date."
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version available: $LATEST"
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+            echo "new_version=$LATEST" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update formula
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          VERSION="${{ steps.check.outputs.new_version }}"
+          MAVEN_BASE="https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli"
+
+          # Download and compute SHA256 for each platform
+          for platform in mac-arm64 mac-x64 linux-x64; do
+            url="${MAVEN_BASE}/${VERSION}/ide-cli-${VERSION}-${platform}.tar.gz"
+            sha=$(curl -fSL "$url" | shasum -a 256 | awk '{print $1}')
+            echo "SHA256 for ${platform}: ${sha}"
+            # Store for later use
+            echo "SHA_${platform//-/_}=${sha}" >> "$GITHUB_ENV"
+          done
+
+          # Update version
+          sed -i "s/version \"[^\"]*\"/version \"${VERSION}\"/" Formula/ideasy.rb
+
+          # Update SHA256 values — match the line after each platform URL
+          sed -i "/mac-arm64\.tar\.gz/{n;s/sha256 \"[^\"]*\"/sha256 \"${SHA_mac_arm64}\"/;}" Formula/ideasy.rb
+          sed -i "/mac-x64\.tar\.gz/{n;s/sha256 \"[^\"]*\"/sha256 \"${SHA_mac_x64}\"/;}" Formula/ideasy.rb
+          sed -i "/linux-x64\.tar\.gz/{n;s/sha256 \"[^\"]*\"/sha256 \"${SHA_linux_x64}\"/;}" Formula/ideasy.rb
+
+      - name: Create Pull Request
+        if: steps.check.outputs.needs_update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "ideasy ${{ steps.check.outputs.new_version }}"
+          title: "ideasy ${{ steps.check.outputs.new_version }}"
+          body: |
+            Automated update of IDEasy formula to version ${{ steps.check.outputs.new_version }}.
+
+            Release notes: https://github.com/devonfw/IDEasy/releases/tag/release%2F${{ steps.check.outputs.new_version }}
+          branch: update-ideasy-${{ steps.check.outputs.new_version }}
+          base: main
