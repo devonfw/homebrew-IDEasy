@@ -41,6 +41,7 @@ class Ideasy < Formula
     #   internal/    - internal resources
     #   system/      - system-specific configs
     #   IDEasy.pdf   - documentation
+    #   gui/         - files required for gui
 
     # Install everything into libexec to keep it self-contained
     libexec.install Dir["*"]
