@@ -9,24 +9,24 @@ class Ideasy < Formula
   desc "Tool to automate the setup and updates of a development environment for any project"
   homepage "https://github.com/devonfw/IDEasy"
   license "Apache-2.0"
-  version "2026.04.002"
+  version "2026.05.001"
 
   # Platform-specific downloads from Maven Central
   on_macos do
     on_arm do
       url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-arm64.tar.gz"
-      sha256 "c252864ce597cf0a0f23578a37cc4c2fd086974ae847c025289811c849f69bb8"
+      sha256 ""
     end
     on_intel do
       url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-x64.tar.gz"
-      sha256 "91453d7314c39db60b0e45772755e6c288e205d2661fc1b5999e77c02653a104"
+      sha256 ""
     end
   end
 
   on_linux do
     on_intel do
       url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-x64.tar.gz"
-      sha256 "5c7102b7a0405a03dd04cd1b92ef1007af41f5499af01cc0167d2b974c2b568b"
+      sha256 ""
     end
   end
 
