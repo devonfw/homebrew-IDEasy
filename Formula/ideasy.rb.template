@@ -69,11 +69,14 @@ class Ideasy < Formula
     # Make the binary executable
     chmod 0755, libexec/"bin/ideasy"
 
-    # Symlink the actual binary (named 'ideasy') into Homebrew's bin
+    # Symlink the only executable of the release into Homebrew's bin.
+    #
+    # 'ide' and 'icd' are deliberately NOT linked here. They are shell functions defined in
+    # 'functions' and registered in ~/.bashrc and ~/.zshrc by 'ideasy install'. They change the
+    # directory of the calling shell and eval the project environment into it, which an
+    # executable cannot do. Linking 'ide' as a binary would shadow nothing for users who ran the
+    # setup, and silently drop the cd and all exported variables for users who did not.
     bin.install_symlink libexec/"bin/ideasy"
-
-    # Also create an 'ide' convenience alias pointing to the same binary
-    bin.install_symlink libexec/"bin/ideasy" => "ide"
   end
 
   def caveats
@@ -81,13 +84,14 @@ class Ideasy < Formula
       IDEasy has been installed. To get started:
 
         1. Run 'ideasy --version' to verify the installation
-        2. Run 'ideasy create <project-name>' to set up a new project
-        3. Visit https://github.com/devonfw/IDEasy/blob/main/documentation/setup.adoc
+        2. Run 'ideasy install' to set up IDE_ROOT and register the IDEasy shell
+           functions ('ide', 'icd') in ~/.bashrc and ~/.zshrc
+        3. Open a new terminal (or run 'source ~/.bashrc'), then use 'ide create <project-name>'
+        4. Visit https://github.com/devonfw/IDEasy/blob/main/documentation/setup.adoc
            for full documentation
 
-      Both 'ideasy' and 'ide' commands are available on your PATH.
-
-      Note: You may need to restart your terminal for the commands to be available.
+      Only 'ideasy' is placed on your PATH. 'ide' and 'icd' are shell functions and become
+      available after step 2, in newly started shells.
     EOS
   end
 
