@@ -20,34 +20,31 @@ class Ideasy < Formula
 
   # Platform-specific downloads from Maven Central.
   #
-  # FormulaAudit/Urls is disabled here because it rewrites Maven Central URLs to
-  # https://search.maven.org/remotecontent?filepath=... search.maven.org is a redirector in front of
-  # repo1.maven.org left over from the time before the Central Portal. repo1.maven.org is the
-  # canonical host that serves the artifacts, it is what the release verifies availability against,
-  # and using it avoids depending on a redirect that may be retired.
-  # rubocop:disable FormulaAudit/Urls
+  # Homebrew's FormulaAudit/Urls requires the search.maven.org form for Maven Central artifacts, and
+  # it cannot be overridden (a tap level .rubocop.yml is not picked up and inline directives are
+  # rejected by Style/DisableCopsWithinSourceCodeDirective). The URLs redirect permanently to
+  # repo1.maven.org, which is the host the release verifies availability against.
   on_macos do
     on_arm do
-      url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-arm64.tar.gz"
+      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-arm64.tar.gz"
       sha256 "@SHA_MAC_ARM64@"
     end
     on_intel do
-      url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-x64.tar.gz"
+      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-x64.tar.gz"
       sha256 "@SHA_MAC_X64@"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-arm64.tar.gz"
+      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-arm64.tar.gz"
       sha256 "@SHA_LINUX_ARM64@"
     end
     on_intel do
-      url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-x64.tar.gz"
+      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-x64.tar.gz"
       sha256 "@SHA_LINUX_X64@"
     end
   end
-  # rubocop:enable FormulaAudit/Urls
 
   def install
     # The IDEasy archive contains:
