@@ -63,6 +63,7 @@ If any of that fails, the IDEasy release fails — the tap can therefore not sil
 
 ### Publishing manually
 
-For catching up or re-publishing a version outside of a release, run the
-**Publish formula** workflow (`workflow_dispatch`) with the version to publish. It performs the same
-render → verify → publish sequence, sourcing the checksums from Maven Central.
+For catching up or re-publishing a version outside of a release,
+run the **Publish formula** workflow (`workflow_dispatch`) with the version to publish.
+It performs the same render → verify → publish sequence,
+sourcing the checksums from Maven Central.
