@@ -31,7 +31,8 @@ usage() {
   echo "Usage: ${0} VERSION SHA_MAC_ARM64 SHA_MAC_X64 SHA_LINUX_ARM64 SHA_LINUX_X64" >&2
 }
 
-if [[ "$#" -ne 5 ]]; then
+if [[ "$#" -ne 5 ]]
+then
   echo "ERROR: expected 5 arguments, got $#." >&2
   usage
   exit 1
@@ -43,20 +44,24 @@ SHA_MAC_X64="${3}"
 SHA_LINUX_ARM64="${4}"
 SHA_LINUX_X64="${5}"
 
-if ! [[ "${VERSION}" =~ ${VERSION_PATTERN} ]]; then
+if ! [[ "${VERSION}" =~ ${VERSION_PATTERN} ]]
+then
   echo "ERROR: '${VERSION}' is not a valid IDEasy version (expected e.g. 2026.07.002)." >&2
   exit 1
 fi
 
-for name in SHA_MAC_ARM64 SHA_MAC_X64 SHA_LINUX_ARM64 SHA_LINUX_X64; do
+for name in SHA_MAC_ARM64 SHA_MAC_X64 SHA_LINUX_ARM64 SHA_LINUX_X64
+do
   value="${!name}"
-  if ! [[ "${value}" =~ ${SHA256_PATTERN} ]]; then
+  if ! [[ "${value}" =~ ${SHA256_PATTERN} ]]
+  then
     echo "ERROR: ${name}='${value}' is not a valid SHA256 (expected 64 lowercase hex characters)." >&2
     exit 1
   fi
 done
 
-if [[ ! -f "${TEMPLATE_PATH}" ]]; then
+if [[ ! -f "${TEMPLATE_PATH}" ]]
+then
   echo "ERROR: template not found at ${TEMPLATE_PATH}" >&2
   exit 1
 fi
@@ -71,22 +76,25 @@ sed \
   -e "s|@SHA_MAC_X64@|${SHA_MAC_X64}|g" \
   -e "s|@SHA_LINUX_ARM64@|${SHA_LINUX_ARM64}|g" \
   -e "s|@SHA_LINUX_X64@|${SHA_LINUX_X64}|g" \
-  "${TEMPLATE_PATH}" > "${tmp_formula}"
+  "${TEMPLATE_PATH}" >"${tmp_formula}"
 
 # --- Verify that no placeholder survived and every field is populated ---
-if grep -q '@[A-Z_0-9]\+@' "${tmp_formula}"; then
+if grep -q '@[A-Z_0-9]\+@' "${tmp_formula}"
+then
   echo "ERROR: unresolved placeholders remain in the rendered formula:" >&2
   grep -o '@[A-Z_0-9]\+@' "${tmp_formula}" | sort -u >&2
   exit 1
 fi
 
 sha_count="$(grep -c 'sha256 "[0-9a-f]\{64\}"' "${tmp_formula}" || true)"
-if [[ "${sha_count}" -ne 4 ]]; then
+if [[ "${sha_count}" -ne 4 ]]
+then
   echo "ERROR: expected 4 populated sha256 entries in the rendered formula, found ${sha_count}." >&2
   exit 1
 fi
 
-if ! grep -q "version \"${VERSION}\"" "${tmp_formula}"; then
+if ! grep -q "version \"${VERSION}\"" "${tmp_formula}"
+then
   echo "ERROR: rendered formula does not declare version \"${VERSION}\"." >&2
   exit 1
 fi
