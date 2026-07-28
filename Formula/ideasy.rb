@@ -20,28 +20,35 @@ class Ideasy < Formula
 
   # Platform-specific downloads from Maven Central.
   #
-  # Homebrew's FormulaAudit/Urls requires the search.maven.org form for Maven Central artifacts, and
-  # it cannot be overridden (a tap level .rubocop.yml is not picked up and inline directives are
-  # rejected by Style/DisableCopsWithinSourceCodeDirective). The URLs redirect permanently to
-  # repo1.maven.org, which is the host the release verifies availability against.
+  # repo.maven.apache.org is the canonical Maven Central host - it is the `central` repository of
+  # Maven's own super POM. It serves the artifacts directly, without any redirect.
+  #
+  # Do not "simplify" this to repo1.maven.org: Homebrew's FormulaAudit/Urls cop matches
+  # %r{https?://(?:central|repo\d+)\.maven\.org/maven2/(.+)$} and demands the legacy
+  # search.maven.org/remotecontent redirector instead, failing `brew test-bot --only-tap-syntax`.
+  # That cop cannot be silenced: `brew style` forces --config on Homebrew's own Library/.rubocop.yml
+  # so a tap level .rubocop.yml is ignored, inline disable directives are rejected by
+  # Style/DisableCopsWithinSourceCodeDirective, and a mirror is audited just like the url.
+  # repo.maven.apache.org matches no cop pattern and is used the same way by the spotbugs, rhino
+  # and allure formulae in homebrew-core.
   on_macos do
     on_arm do
-      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-arm64.tar.gz"
+      url "https://repo.maven.apache.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-arm64.tar.gz"
       sha256 "8ff84081202209163bb998e00ca8ac28c8888225f846cbd5ea852cf4419bd458"
     end
     on_intel do
-      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-x64.tar.gz"
+      url "https://repo.maven.apache.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-x64.tar.gz"
       sha256 "60969a02d1d26f4b08e4c540dbba347e72f572bd992918135fa1b81de18b951a"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-arm64.tar.gz"
+      url "https://repo.maven.apache.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-arm64.tar.gz"
       sha256 "dd34348f6d895ef5e99e3dfcbafd3db0e790163e025841ecf637710248296b62"
     end
     on_intel do
-      url "https://search.maven.org/remotecontent?filepath=com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-x64.tar.gz"
+      url "https://repo.maven.apache.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-linux-x64.tar.gz"
       sha256 "f03c8a0b1b29223d5a259160b51b86bfbddd3bd7cbfd40e50d6d5a03ab807ebc"
     end
   end

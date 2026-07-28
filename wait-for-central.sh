@@ -3,14 +3,16 @@
 # wait-for-central.sh
 # =============================================================================
 # Waits until all IDEasy release archives of a given version are actually
-# downloadable from Maven Central (repo1.maven.org) and reports their SHA256
-# checksums.
+# downloadable from Maven Central and reports their SHA256 checksums.
 #
 # Publishing to Maven Central is not instantaneous: even once the Central
 # Portal reports a deployment as published, it takes a moment until the
-# artifacts are served from repo1. The Homebrew formula points at Maven
-# Central, so it must not be published before the artifacts it references
-# actually resolve.
+# artifacts are actually served. The Homebrew formula must not be published
+# before the artifacts it references resolve.
+#
+# This probes repo.maven.apache.org - the exact host the formula downloads
+# from. Maven Central is fronted by a CDN that caches per hostname, so the
+# check has to use the same host to be meaningful.
 #
 # When expected checksums are passed, they are compared against what Central
 # serves. That proves the bytes that were released and the bytes referenced by
@@ -33,7 +35,7 @@
 
 set -euo pipefail
 
-MAVEN_BASE="https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli"
+MAVEN_BASE="https://repo.maven.apache.org/maven2/com/devonfw/tools/IDEasy/ide-cli"
 PLATFORMS=(mac-arm64 mac-x64 linux-arm64 linux-x64)
 
 WAIT_MAX_SECONDS="${WAIT_MAX_SECONDS:-1800}"
