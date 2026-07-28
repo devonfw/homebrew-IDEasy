@@ -1,0 +1,115 @@
+# =============================================================================
+# publish-formula.yml - manually publish the formula for a given IDEasy version
+# =============================================================================
+# In the normal case the formula is published by the release workflow of
+# devonfw/IDEasy, synchronously as part of the release. Homebrew is a primary
+# distribution channel, so a broken formula fails the IDEasy release itself
+# rather than being repaired afterwards.
+#
+# This workflow is the manual counterpart for the cases that are not a release:
+#   - catching up after the tap fell behind
+#   - re-publishing a version whose formula needs to be regenerated
+#
+# It performs the same render -> verify -> publish sequence, but sources the
+# checksums from Maven Central instead of from freshly built artifacts.
+# =============================================================================
+
+name: Publish formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "IDEasy version to publish, e.g. 2026.07.002"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    name: Render formula
+    runs-on: ubuntu-latest
+    outputs:
+      sha_mac_arm64: ${{ steps.central.outputs.sha_mac_arm64 }}
+      sha_mac_x64: ${{ steps.central.outputs.sha_mac_x64 }}
+      sha_linux_arm64: ${{ steps.central.outputs.sha_linux_arm64 }}
+      sha_linux_x64: ${{ steps.central.outputs.sha_linux_x64 }}
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+
+      - name: Wait for artifacts on Maven Central
+        id: central
+        run: ./wait-for-central.sh "${{ inputs.version }}"
+
+      - name: Render formula
+        run: |
+          ./render-formula.sh "${{ inputs.version }}" \
+            "${{ steps.central.outputs.sha_mac_arm64 }}" \
+            "${{ steps.central.outputs.sha_mac_x64 }}" \
+            "${{ steps.central.outputs.sha_linux_arm64 }}" \
+            "${{ steps.central.outputs.sha_linux_x64 }}"
+
+      - name: Upload rendered formula
+        uses: actions/upload-artifact@v4
+        with:
+          name: formula
+          path: Formula/ideasy.rb
+
+  verify:
+    name: Verify formula
+    needs: render
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, macos-15-intel ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+
+      - name: Download rendered formula
+        uses: actions/download-artifact@v4
+        with:
+          name: formula
+          path: Formula
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Audit formula
+        run: brew audit --strict --online --formula ./Formula/ideasy.rb
+
+      - name: Install formula
+        run: brew install --formula ./Formula/ideasy.rb
+
+      - name: Test formula
+        run: brew test --formula ./Formula/ideasy.rb
+
+  publish:
+    name: Publish formula
+    needs: [ render, verify ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+
+      - name: Download rendered formula
+        uses: actions/download-artifact@v4
+        with:
+          name: formula
+          path: Formula
+
+      - name: Commit and push formula
+        run: |
+          if git diff --quiet -- Formula/ideasy.rb; then
+            echo "Formula already up to date for ${{ inputs.version }}, nothing to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/ideasy.rb
+          git commit -m "ideasy ${{ inputs.version }}"
+          git push

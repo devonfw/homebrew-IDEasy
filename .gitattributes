@@ -1,0 +1,7 @@
+# The formula and the scripts are consumed by Homebrew and by CI on Linux and macOS.
+# Keep them LF-only regardless of the platform they are edited on.
+*.rb text eol=lf
+*.template text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
