@@ -15,7 +15,17 @@ class Ideasy < Formula
   version "@VERSION@"
   license "Apache-2.0"
 
-  # Platform-specific downloads from Maven Central
+  depends_on "bash"
+  depends_on "git"
+
+  # Platform-specific downloads from Maven Central.
+  #
+  # FormulaAudit/Urls is disabled here because it rewrites Maven Central URLs to
+  # https://search.maven.org/remotecontent?filepath=... search.maven.org is a redirector in front of
+  # repo1.maven.org left over from the time before the Central Portal. repo1.maven.org is the
+  # canonical host that serves the artifacts, it is what the release verifies availability against,
+  # and using it avoids depending on a redirect that may be retired.
+  # rubocop:disable FormulaAudit/Urls
   on_macos do
     on_arm do
       url "https://repo1.maven.org/maven2/com/devonfw/tools/IDEasy/ide-cli/#{version}/ide-cli-#{version}-mac-arm64.tar.gz"
@@ -37,9 +47,7 @@ class Ideasy < Formula
       sha256 "@SHA_LINUX_X64@"
     end
   end
-
-  depends_on "bash"
-  depends_on "git"
+  # rubocop:enable FormulaAudit/Urls
 
   def install
     # The IDEasy archive contains:
