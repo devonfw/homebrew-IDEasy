@@ -51,8 +51,8 @@ so this tap is updated **synchronously as part of the IDEasy release**.
 The [release workflow](https://github.com/devonfw/IDEasy/blob/main/.github/workflows/release.yml) of IDEasy renders, verifies and pushes the formula itself.
 If any of that fails, the IDEasy release fails — the tap can therefore not silently fall behind.
 
-`Formula/ideasy.rb` is **generated** and must not be edited by hand. Edit
-`Formula/ideasy.rb.template` instead; CI fails if the two drift apart.
+`Formula/ideasy.rb` is **generated** and must not be edited by hand.
+Edit `Formula/ideasy.rb.template` instead; CI fails if the two drift apart.
 
 ### Scripts
 
