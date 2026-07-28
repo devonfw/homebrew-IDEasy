@@ -1,27 +1,70 @@
 # =============================================================================
-# publish-formula.yml - manually publish the formula for a given IDEasy version
+# publish-formula.yml - render, verify and publish the formula for an IDEasy version
 # =============================================================================
-# In the normal case the formula is published by the release workflow of
-# devonfw/IDEasy, synchronously as part of the release. Homebrew is a primary
-# distribution channel, so a broken formula fails the IDEasy release itself
-# rather than being repaired afterwards.
+# This is the single implementation of the publishing sequence. It is used in two ways:
 #
-# This workflow is the manual counterpart for the cases that are not a release:
-#   - catching up after the tap fell behind
-#   - re-publishing a version whose formula needs to be regenerated
+#   1. Called by the release workflow of devonfw/IDEasy via 'uses:' (workflow_call). Homebrew is a
+#      primary distribution channel, so the release calls this workflow synchronously: if publishing
+#      fails, the calling job fails and with it the whole IDEasy release. The release passes the
+#      checksums of the archives it just built, which are then verified against what Maven Central
+#      serves.
 #
-# It performs the same render -> verify -> publish sequence, but sources the
-# checksums from Maven Central instead of from freshly built artifacts.
+#   2. Triggered manually (workflow_dispatch) for recovery: catching up after the tap fell behind,
+#      or re-publishing a version whose formula needs to be regenerated. Without checksums passed
+#      in, they are taken from Maven Central.
+#
+# Keeping both paths in one workflow means there is nothing to keep in sync between the two
+# repositories - the release owns when to publish, this workflow owns how.
 # =============================================================================
 
 name: Publish formula
 
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: "IDEasy version to publish, e.g. 2026.07.002"
+        required: true
+        type: string
+      ref:
+        description: "Ref of this tap to publish from"
+        required: false
+        default: main
+        type: string
+      sha_mac_arm64:
+        description: "Checksum of the released mac-arm64 archive, verified against Maven Central"
+        required: false
+        default: ""
+        type: string
+      sha_mac_x64:
+        description: "Checksum of the released mac-x64 archive, verified against Maven Central"
+        required: false
+        default: ""
+        type: string
+      sha_linux_arm64:
+        description: "Checksum of the released linux-arm64 archive, verified against Maven Central"
+        required: false
+        default: ""
+        type: string
+      sha_linux_x64:
+        description: "Checksum of the released linux-x64 archive, verified against Maven Central"
+        required: false
+        default: ""
+        type: string
+    secrets:
+      ACTION_PUSH_TOKEN:
+        description: "Token with write access to this tap. Required when called from another repository."
+        required: false
   workflow_dispatch:
     inputs:
       version:
         description: "IDEasy version to publish, e.g. 2026.07.002"
         required: true
+        type: string
+      ref:
+        description: "Ref of this tap to publish from"
+        required: false
+        default: main
         type: string
 
 permissions:
@@ -31,18 +74,34 @@ jobs:
   render:
     name: Render formula
     runs-on: ubuntu-latest
-    outputs:
-      sha_mac_arm64: ${{ steps.central.outputs.sha_mac_arm64 }}
-      sha_mac_x64: ${{ steps.central.outputs.sha_mac_x64 }}
-      sha_linux_arm64: ${{ steps.central.outputs.sha_linux_arm64 }}
-      sha_linux_x64: ${{ steps.central.outputs.sha_linux_x64 }}
     steps:
+      # The repository is always given explicitly: when this workflow is called from devonfw/IDEasy,
+      # a plain checkout would check out the calling repository instead of this tap.
       - name: Checkout tap
         uses: actions/checkout@v4
+        with:
+          repository: devonfw/homebrew-IDEasy
+          ref: ${{ inputs.ref }}
 
-      - name: Wait for artifacts on Maven Central
+      - name: Resolve checksums from Maven Central
         id: central
-        run: ./wait-for-central.sh "${{ inputs.version }}"
+        env:
+          VERSION: ${{ inputs.version }}
+          SHA_MAC_ARM64: ${{ inputs.sha_mac_arm64 }}
+          SHA_MAC_X64: ${{ inputs.sha_mac_x64 }}
+          SHA_LINUX_ARM64: ${{ inputs.sha_linux_arm64 }}
+          SHA_LINUX_X64: ${{ inputs.sha_linux_x64 }}
+        run: |
+          # With checksums passed in by the release, they are verified against what Central serves.
+          # Without them, they are taken from Central. Either way the script reports them and fails
+          # if the artifacts do not become available.
+          if [[ -n "${SHA_MAC_ARM64}" ]]
+          then
+            ./wait-for-central.sh "${VERSION}" \
+              "${SHA_MAC_ARM64}" "${SHA_MAC_X64}" "${SHA_LINUX_ARM64}" "${SHA_LINUX_X64}"
+          else
+            ./wait-for-central.sh "${VERSION}"
+          fi
 
       - name: Render formula
         run: |
@@ -69,6 +128,9 @@ jobs:
     steps:
       - name: Checkout tap
         uses: actions/checkout@v4
+        with:
+          repository: devonfw/homebrew-IDEasy
+          ref: ${{ inputs.ref }}
 
       - name: Download rendered formula
         uses: actions/download-artifact@v4
@@ -95,6 +157,11 @@ jobs:
     steps:
       - name: Checkout tap
         uses: actions/checkout@v4
+        with:
+          repository: devonfw/homebrew-IDEasy
+          ref: ${{ inputs.ref }}
+          # When called from another repository the automatic token cannot write to this tap.
+          token: ${{ secrets.ACTION_PUSH_TOKEN || github.token }}
 
       - name: Download rendered formula
         uses: actions/download-artifact@v4
@@ -103,13 +170,16 @@ jobs:
           path: Formula
 
       - name: Commit and push formula
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          if git diff --quiet -- Formula/ideasy.rb; then
-            echo "Formula already up to date for ${{ inputs.version }}, nothing to publish."
+          if git diff --quiet -- Formula/ideasy.rb
+          then
+            echo "Formula already up to date for ${VERSION}, nothing to publish."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Formula/ideasy.rb
-          git commit -m "ideasy ${{ inputs.version }}"
+          git commit -m "ideasy ${VERSION}"
           git push
