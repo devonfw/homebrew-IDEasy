@@ -1,0 +1,9 @@
+# Configuration for `brew style` / `brew audit` on this tap.
+
+FormulaAudit/Urls:
+  # The cop rewrites Maven Central URLs to https://search.maven.org/remotecontent?filepath=...
+  # search.maven.org is a redirector in front of repo1.maven.org and a leftover from the time before
+  # the Central Portal. repo1.maven.org is the canonical host that actually serves the artifacts, it
+  # is what the release verifies availability against, and it avoids depending on a redirect that
+  # may be retired. The URLs are therefore kept as they are.
+  Enabled: false

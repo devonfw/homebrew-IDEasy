@@ -10,10 +10,10 @@
 # License: Apache-2.0
 
 class Ideasy < Formula
-  desc "Tool to automate the setup and updates of a development environment for any project"
+  desc "Automate setup and updates of a development environment for any project"
   homepage "https://github.com/devonfw/IDEasy"
-  license "Apache-2.0"
   version "@VERSION@"
+  license "Apache-2.0"
 
   # Platform-specific downloads from Maven Central
   on_macos do
@@ -38,8 +38,8 @@ class Ideasy < Formula
     end
   end
 
-  depends_on "git"
   depends_on "bash"
+  depends_on "git"
 
   def install
     # The IDEasy archive contains:
