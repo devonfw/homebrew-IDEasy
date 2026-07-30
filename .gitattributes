@@ -1,0 +1,3 @@
+# The formula and the scripts are consumed by Homebrew and by CI on Linux and macOS.
+# Keep them LF-only regardless of the platform they are edited on.
+* text eol=lf
