@@ -154,14 +154,6 @@ jobs:
       - name: Install formula
         run: brew install --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
-      # TEMPORARY DIAGNOSTIC - not for merge. 'brew test' via shell_output swallows stdout/stderr
-      # when the exit code assertion fails, so this runs the binary directly first to see why.
-      - name: Debug ideasy invocation
-        run: |
-          "$(brew --prefix)/bin/ideasy" --version
-          echo "exit status: $?"
-        continue-on-error: true
-
       - name: Test formula
         run: brew test "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
