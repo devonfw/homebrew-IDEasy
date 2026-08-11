@@ -142,7 +142,14 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Audit formula
-        run: brew audit --strict --online --formula ./Formula/ideasy.rb
+        # 'brew audit' no longer accepts a path (Homebrew/brew#18873); it must resolve the formula
+        # by name through a tap. Since Formula/ideasy.rb here is the freshly rendered, uncommitted
+        # version from the render job, it is copied into a throwaway local tap instead of tapping
+        # this checkout - tapping would 'git clone' and only see the last committed state.
+        run: |
+          brew tap-new local/ideasy-audit --no-git
+          cp ./Formula/ideasy.rb "$(brew --repository)/Library/Taps/local/homebrew-ideasy-audit/Formula/ideasy.rb"
+          brew audit --strict --online --formula ideasy
 
       - name: Install formula
         run: brew install --formula ./Formula/ideasy.rb
