@@ -143,16 +143,16 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Audit formula
-        # 'brew audit' no longer accepts a path (Homebrew/brew#18873); it must resolve the formula
-        # by name through a tap. setup-homebrew already taps this checkout (with the freshly
-        # rendered Formula/ideasy.rb) under the tap name it reports here.
+        # Homebrew now rejects a bare formula path for audit/install/test (Homebrew/brew#18873);
+        # it must resolve the formula by name through a tap. setup-homebrew already taps this
+        # checkout (with the freshly rendered Formula/ideasy.rb) under the tap name it reports here.
         run: brew audit --strict --online --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
       - name: Install formula
-        run: brew install --formula ./Formula/ideasy.rb
+        run: brew install --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
       - name: Test formula
-        run: brew test --formula ./Formula/ideasy.rb
+        run: brew test --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
   publish:
     name: Publish formula
