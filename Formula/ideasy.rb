@@ -96,10 +96,12 @@ class Ideasy < Formula
   end
 
   test do
-    # A first run prompts for the license agreement on stdin (fine for the interactive use the
-    # caveats describe). '--batch --force' alone does not skip it - per
-    # cli/src/test/integration-tests/install-requires-license-agreement.sh the prompt always
-    # appears; piping the answer is what this project's own tests rely on to run headless.
-    assert_match version.to_s, shell_output("echo yes | #{bin}/ideasy --force --version 2>&1")
+    # A first run prompts for the license agreement on stdin, which is fine for the interactive
+    # use the caveats describe but hangs here with no stdin. ensureLicenseAgreement in
+    # AbstractIdeContext treats the presence of ~/.ide/.license.agreement as prior acceptance and
+    # skips the prompt unconditionally, so pre-creating it avoids the hang - flags and piped input
+    # were both tried and did not.
+    assert_match version.to_s,
+                 shell_output("mkdir -p ~/.ide && touch ~/.ide/.license.agreement && #{bin}/ideasy --version 2>&1")
   end
 end
