@@ -96,6 +96,8 @@ class Ideasy < Formula
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/ideasy --version 2>&1")
+    # A first run prompts for the license agreement on stdin (fine for the interactive use the
+    # caveats describe); '--batch --force' answers it non-interactively so the test doesn't hang.
+    assert_match version.to_s, shell_output("#{bin}/ideasy --batch --force --version 2>&1")
   end
 end
