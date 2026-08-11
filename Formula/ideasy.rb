@@ -99,11 +99,16 @@ class Ideasy < Formula
     # A first run prompts for the license agreement on stdin, which is fine for the interactive
     # use the caveats describe but hangs here with no stdin. ensureLicenseAgreement in
     # AbstractIdeContext treats the presence of ~/.ide/.license.agreement as prior acceptance and
-    # skips the prompt unconditionally, so pre-creating it avoids the hang - flags and piped input
-    # were both tried and did not.
+    # skips the prompt unconditionally - but it resolves '~' via the JVM's 'user.home' property
+    # (AbstractIdeContext.java:207), which on macOS the JVM sets from the OS user database, not
+    # from a relocated $HOME. brew relocates $HOME to 'testpath' for this test, so 'user.home'
+    # must be forced there too via '-Duser.home', or ensureLicenseAgreement tries (and fails, since
+    # it's outside the sandbox's writable paths) to create .ide under the real, unrelocated home.
     # TEMP DIAGNOSTIC - do not merge: shell_output swallows stdout/stderr when its exit-code
     # assertion fails, so this prints the captured output before asserting.
-    output = `mkdir -p ~/.ide && touch ~/.ide/.license.agreement && #{bin}/ideasy --version 2>&1`
+    system "mkdir", "-p", "#{testpath}/.ide"
+    system "touch", "#{testpath}/.ide/.license.agreement"
+    output = `_JAVA_OPTIONS="-Duser.home=#{testpath}" #{bin}/ideasy --version 2>&1`
     puts output
     puts "exit status: #{$?.exitstatus}"
     assert_match version.to_s, output
