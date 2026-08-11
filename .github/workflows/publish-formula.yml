@@ -78,7 +78,7 @@ jobs:
       # The repository is always given explicitly: when this workflow is called from devonfw/IDEasy,
       # a plain checkout would check out the calling repository instead of this tap.
       - name: Checkout tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: devonfw/homebrew-IDEasy
           ref: ${{ inputs.ref }}
@@ -112,7 +112,7 @@ jobs:
             "${{ steps.central.outputs.sha_linux_x64 }}"
 
       - name: Upload rendered formula
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: formula
           path: Formula/ideasy.rb
@@ -127,20 +127,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: devonfw/homebrew-IDEasy
           ref: ${{ inputs.ref }}
 
       - name: Download rendered formula
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: formula
           path: Formula
 
       - name: Set up Homebrew
         id: setup-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        # Pinned to 2026.07.10.1: the 'master' branch sync is being phased out ahead of Homebrew 5.2.0.
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
 
       - name: Audit formula
         # Homebrew now rejects a bare formula path for audit/install/test (Homebrew/brew#18873);
@@ -152,7 +153,7 @@ jobs:
         run: brew install --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
       - name: Test formula
-        run: brew test --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
+        run: brew test "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
 
   publish:
     name: Publish formula
@@ -160,7 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: devonfw/homebrew-IDEasy
           ref: ${{ inputs.ref }}
@@ -168,7 +169,7 @@ jobs:
           token: ${{ secrets.ACTION_PUSH_TOKEN || github.token }}
 
       - name: Download rendered formula
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: formula
           path: Formula
