@@ -97,7 +97,9 @@ class Ideasy < Formula
 
   test do
     # A first run prompts for the license agreement on stdin (fine for the interactive use the
-    # caveats describe); '--batch --force' answers it non-interactively so the test doesn't hang.
-    assert_match version.to_s, shell_output("#{bin}/ideasy --batch --force --version 2>&1")
+    # caveats describe). '--batch --force' alone does not skip it - per
+    # cli/src/test/integration-tests/install-requires-license-agreement.sh the prompt always
+    # appears; piping the answer is what this project's own tests rely on to run headless.
+    assert_match version.to_s, shell_output("echo yes | #{bin}/ideasy --force --version 2>&1")
   end
 end
