@@ -140,8 +140,10 @@ jobs:
 
       - name: Set up Homebrew
         id: setup-homebrew
-        # Pinned to 2026.07.10.1: the 'master' branch sync is being phased out ahead of Homebrew 5.2.0.
-        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
+        # Pinned to 2026.08.10.2 (what '@master' itself currently resolves to): the 'master' branch
+        # sync is being phased out ahead of Homebrew 5.2.0. Needs a tag that already ships the
+        # 'tap-name' output (added 2026-07-31, after the 2026.07.10.1 tag GitHub's own warning names).
+        uses: Homebrew/actions/setup-homebrew@b35a29a0f83ee8b8ca07b219fc8db3d7bb88ab49
 
       - name: Audit formula
         # Homebrew now rejects a bare formula path for audit/install/test (Homebrew/brew#18873);
