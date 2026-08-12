@@ -104,11 +104,13 @@ class Ideasy < Formula
     # from a relocated $HOME. brew relocates $HOME to 'testpath' for this test, so 'user.home'
     # must be forced there too via '-Duser.home', or ensureLicenseAgreement tries (and fails, since
     # it's outside the sandbox's writable paths) to create .ide under the real, unrelocated home.
+    # This binary is a native image, not launched via the 'java' launcher, so it doesn't read
+    # _JAVA_OPTIONS; '-D' has to be passed directly as an argument instead.
     # TEMP DIAGNOSTIC - do not merge: shell_output swallows stdout/stderr when its exit-code
     # assertion fails, so this prints the captured output before asserting.
     system "mkdir", "-p", "#{testpath}/.ide"
     system "touch", "#{testpath}/.ide/.license.agreement"
-    output = `_JAVA_OPTIONS="-Duser.home=#{testpath}" #{bin}/ideasy --version 2>&1`
+    output = `#{bin}/ideasy -Duser.home=#{testpath} --version 2>&1`
     puts output
     puts "exit status: #{$?.exitstatus}"
     assert_match version.to_s, output
