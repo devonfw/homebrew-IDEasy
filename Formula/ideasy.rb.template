@@ -106,8 +106,8 @@ class Ideasy < Formula
     # it's outside the sandbox's writable paths) to create .ide under the real, unrelocated home.
     # This binary is a native image, not launched via the 'java' launcher, so it doesn't read
     # _JAVA_OPTIONS; '-D' has to be passed directly as an argument instead.
-    mkdir testpath/".ide"
-    touch testpath/".ide/.license.agreement"
+    mkdir testpath/.ide
+    touch testpath/.ide/.license.agreement
     assert_match version.to_s, shell_output("#{bin}/ideasy -Duser.home=#{testpath} --version 2>&1")
   end
 end
