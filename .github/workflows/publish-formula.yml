@@ -120,11 +120,10 @@ jobs:
   verify:
     name: Verify formula
     needs: render
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ macos-latest, macos-15-intel ]
-    runs-on: ${{ matrix.os }}
+    # Only Apple silicon: Homebrew no longer builds bottles for macOS on Intel (as of September 2026),
+    # so 'brew install' compiles the dependencies of the formula (bash, git, ...) from source there and
+    # runs for hours, which would block the release.
+    runs-on: macos-latest
     steps:
       - name: Checkout tap
         uses: actions/checkout@v7
