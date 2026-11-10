@@ -139,23 +139,33 @@ jobs:
           path: Formula
 
       - name: Set up Homebrew
-        id: setup-homebrew
         # Pinned to 2026.08.10.2 (what '@master' itself currently resolves to): the 'master' branch
-        # sync is being phased out ahead of Homebrew 5.2.0. Needs a tag that already ships the
-        # 'tap-name' output (added 2026-07-31, after the 2026.07.10.1 tag GitHub's own warning names).
+        # sync is being phased out ahead of Homebrew 5.2.0.
         uses: Homebrew/actions/setup-homebrew@b35a29a0f83ee8b8ca07b219fc8db3d7bb88ab49
 
-      - name: Audit formula
+      - name: Tap this checkout
+        id: tap
         # Homebrew now rejects a bare formula path for audit/install/test (Homebrew/brew#18873);
-        # it must resolve the formula by name through a tap. setup-homebrew already taps this
-        # checkout (with the freshly rendered Formula/ideasy.rb) under the tap name it reports here.
-        run: brew audit --strict --online --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
+        # it must resolve the formula by name through a tap. setup-homebrew only taps the checkout
+        # (and reports 'tap-name') when the workflow runs in a repository named 'homebrew-*'. When
+        # this workflow is called from devonfw/IDEasy it does neither and the tap name stays empty
+        # ("No available formula with the name"). So the checkout, with the freshly rendered
+        # Formula/ideasy.rb, is linked into Homebrew's taps here, exactly as setup-homebrew does it.
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/devonfw/homebrew-ideasy"
+          mkdir -p "$(dirname "${tap_dir}")"
+          ln -sfn "${GITHUB_WORKSPACE}" "${tap_dir}"
+          brew trust devonfw/ideasy
+          echo "tap-name=devonfw/ideasy" >> "${GITHUB_OUTPUT}"
+
+      - name: Audit formula
+        run: brew audit --strict --online --formula "${{ steps.tap.outputs.tap-name }}/ideasy"
 
       - name: Install formula
-        run: brew install --formula "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
+        run: brew install --formula "${{ steps.tap.outputs.tap-name }}/ideasy"
 
       - name: Test formula
-        run: brew test "${{ steps.setup-homebrew.outputs.tap-name }}/ideasy"
+        run: brew test "${{ steps.tap.outputs.tap-name }}/ideasy"
 
   publish:
     name: Publish formula
